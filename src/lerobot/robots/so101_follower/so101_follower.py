@@ -176,8 +176,13 @@ class SO101Follower(Robot):
 
         # Read arm position
         start = time.perf_counter()
-        obs_dict = self.bus.sync_read("Present_Position")
-        obs_dict = {f"{motor}.pos": val for motor, val in obs_dict.items()}
+        obs_dict_pos = self.bus.sync_read("Present_Position")
+        obs_dict_pos = {f"{motor}.pos": val for motor, val in obs_dict_pos.items()}
+        obs_dict_vel = self.bus.sync_read("Present_Velocity")
+        obs_dict_vel = {f"{motor}.vel": val for motor, val in obs_dict_vel.items()}
+        obs_dict_effort = self.bus.sync_read(data_name="Present_Load", normalize=False)
+        obs_dict_effort = {f"{motor}.effort": val for motor, val in obs_dict_effort.items()}
+        obs_dict = {**obs_dict_pos, **obs_dict_vel, **obs_dict_effort}
         dt_ms = (time.perf_counter() - start) * 1e3
         logger.debug(f"{self} read state: {dt_ms:.1f}ms")
 

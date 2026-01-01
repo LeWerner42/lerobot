@@ -19,7 +19,7 @@ from pprint import pformat
 
 from lerobot.motors.encoding_utils import decode_sign_magnitude, encode_sign_magnitude
 
-from ..motors_bus import Motor, MotorCalibration, MotorsBus, NameOrID, Value, get_address
+from ..motors_bus import Motor, MotorCalibration, MotorNormMode, MotorsBus, NameOrID, Value, get_address
 from .tables import (
     FIRMWARE_MAJOR_VERSION,
     FIRMWARE_MINOR_VERSION,
@@ -40,6 +40,8 @@ DEFAULT_TIMEOUT_MS = 1000
 NORMALIZED_DATA = ["Goal_Position", "Present_Position"]
 
 logger = logging.getLogger(__name__)
+
+VELOCITY_UNIT_DEG_PER_SEC = 0.0876  # Feetech STS series: Present_Velocity unit to deg/s per datasheet.
 
 
 class OperatingMode(Enum):
@@ -331,6 +333,16 @@ class FeetechMotorsBus(MotorsBus):
 
     def _split_into_byte_chunks(self, value: int, length: int) -> list[int]:
         return _split_into_byte_chunks(value, length)
+
+    def _normalize_velocity(self, ids_values: dict[int, int]) -> dict[int, float]:
+        normalized_values = {}
+        for id_, val in ids_values.items():
+            motor = self._id_to_name(id_)
+            if self.motors[motor].norm_mode is MotorNormMode.DEGREES:
+                normalized_values[id_] = val * VELOCITY_UNIT_DEG_PER_SEC
+            else:
+                normalized_values[id_] = val
+        return normalized_values
 
     def _broadcast_ping(self) -> tuple[dict[int, int], int]:
         import scservo_sdk as scs

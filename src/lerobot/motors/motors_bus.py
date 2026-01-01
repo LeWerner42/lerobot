@@ -826,6 +826,9 @@ class MotorsBus(abc.ABC):
 
         return unnormalized_values
 
+    def _normalize_velocity(self, ids_values: dict[int, int]) -> dict[int, float]:
+        return ids_values
+
     @abc.abstractmethod
     def _encode_sign(self, data_name: str, ids_values: dict[int, int]) -> dict[int, int]:
         pass
@@ -941,6 +944,8 @@ class MotorsBus(abc.ABC):
 
         id_value = self._decode_sign(data_name, {id_: value})
 
+        if normalize and data_name == "Present_Velocity":
+            id_value = self._normalize_velocity(id_value)
         if normalize and data_name in self.normalized_data:
             id_value = self._normalize(id_value)
 
@@ -1087,6 +1092,8 @@ class MotorsBus(abc.ABC):
 
         ids_values = self._decode_sign(data_name, ids_values)
 
+        if normalize and data_name == "Present_Velocity":
+            ids_values = self._normalize_velocity(ids_values)
         if normalize and data_name in self.normalized_data:
             ids_values = self._normalize(ids_values)
 
